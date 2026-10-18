@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 适配手机屏幕 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Dashboard</title>
+    <style>
+        /* 全局重置：清除默认内外边距，统一盒模型 */
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        /* 页面主体：让手机框在页面水平+垂直居中，深色背景 */
+        body{
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #222;
+        }
+        /* 手机外框容器，所有内容都放在这里 */
+        .phone-frame{
+            width: 420px;        /* 手机框宽度 */
+            height: 900px;       /* 手机框高度 */
+            padding: 24px;       /* 内部留白 */
+            border-radius: 48px; /* 圆角模拟手机外壳 */
+            background:rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px); /* 毛玻璃效果 */
+            border:1px solid rgba(255,255,255,0.15);
+            overflow: hidden;    /* 超出框的内容隐藏 */
+            color: #fff;         /* 默认文字白色 */
+        }
+        /* 顶部一行：菜单、铃铛、头像、搜索 */
+        .header-row{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        /* 圆形图标容器（铃铛、菜单、搜索） */
+        .icon-circle{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background:rgba(255,255,255,0.12);
+            display: grid;
+            place-items: center;
+            display: inline-grid;
+            vertical-align: top;
+        }
+        /* 头像图片样式 */
+        .avatar{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: inline-block;
+            vertical-align: top;
+        }
+        /* 欢迎文字区域 */
+        .greeting h1{
+            font-size: 48px;
+            font-weight: 300;
+            margin-bottom: 6px;
+        }
+        .greeting p{
+            opacity: 0.75;
+            font-size: 18px;
+        }
+        /* 房间标签栏：客厅/厨房/卧室 */
+        .room-tabs{
+            display: grid;
+            grid-template-columns:48px 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .tab{
+            padding:14px 12px;
+            border-radius:999px;
+            text-align:center;
+            background:rgba(255,255,255,0.1);
+        }
+        .tab.active{
+            background:#fff;
+            color:#222;
+        }
+        /* 玻璃卡片通用样式，所有卡片共用 */
+        .glass-card{
+            border-radius:24px;
+            padding:20px;
+            background:rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border:1px solid rgba(255,255,255,0.12);
+        }
+        /* 音乐卡片 */
+        .music-card{
+            margin-bottom:16px;
+            display:flex;
+            gap:16px;
+            align-items:center;
+        }
+        .music-cover{
+            width:120px;
+            height:120px;
+            border-radius:16px;
+            object-fit:cover;
+        }
+        .music-info{
+            flex:1;
+        }
+        .music-title{
+            font-size:22px;
+            margin-bottom:4px;
+        }
+        .music-artist{
+            opacity:0.7;
+            margin-bottom:12px;
+        }
+        /* 进度条容器 */
+        .progress-bar{
+            width:100%;
+            height:4px;
+            background:rgba(255,255,255,0.2);
+            border-radius:99px;
+            margin-bottom:16px;
+            position:relative;
+        }
+        /* 进度条填充部分 */
+        .progress-fill{
+            position:absolute;
+            left:0;
+            top:0;
+            width:60%;
+            height:100%;
+            background:#fff;
+            border-radius:99px;
+        }
+        .music-controls{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        /* 两栏网格：智能灯 + 闹钟 */
+        .grid-2col{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+            margin-bottom:16px;
+        }
+        /* 智能灯卡片 */
+        .light-card{
+            height:260px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            background:linear-gradient(140deg, rgba(0,0,0,0.3), rgba(40,90,80,0.25));
+        }
+        .light-img{
+            width:100%;
+            height:140px;
+            object-fit:contain;
+        }
+        /* 卡片底部文字+开关一行 */
+        .card-footer{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        /* 开关容器 */
+        .toggle{
+            width:52px;
+            height:30px;
+            border-radius:99px;
+            background:#ff8b59;
+            position:relative;
+        }
+        /* 开关白色小圆点 */
+        .toggle::after{
+            content:"";
+            position:absolute;
+            width:24px;
+            height:24px;
+            border-radius:50%;
+            background:white;
+            right:3px;
+            top:3px;
+        }
+        /* 闹钟卡片（白底深色字） */
+        .alarm-card{
+            height:260px;
+            background:rgba(255,255,255,0.88);
+            color:#222;
+        }
+        .alarm-time{
+            font-size:52px;
+            font-weight:500;
+            margin:10px 0 6px;
+        }
+        /* 底部两栏网格：WIFI + 温度 */
+        .grid-bottom{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+        .wifi-card{
+            height:200px;
+            background:rgba(255,255,255,0.15);
+        }
+        /* 温度卡片 */
+        .temp-card{
+            height:200px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            background:linear-gradient(140deg, rgba(0,0,0,0.3), rgba(40,90,80,0.25));
+            position:relative;
+        }
+        .temp-circle{
+            width:120px;
+            height:120px;
+            border-radius:50%;
+            background:white;
+            color:#222;
+            display:grid;
+            place-items:center;
+            font-size:32px;
+            font-weight:500;
+            margin-bottom:8px;
+        }
+        /* 温度卡片右上角开关 */
+        .temp-card .toggle{
+            position:absolute;
+            top:20px;
+            right:20px;
+        }
+        /* 底部导航栏 */
+        .bottom-nav{
+            display:flex;
+            justify-content:space-around;
+            margin-top:24px;
+            padding:12px 0;
+            border-radius:999px;
+            background:rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 手机框：所有页面内容都写在这个div里面 -->
+    <div class="phone-frame">
+        <!-- 顶部一行：菜单图标、铃铛+头像+搜索 -->
+        <div class="header-row">
+            <div class="icon-circle">☰</div>
+            <div>
+                <span class="icon-circle">🔔</span>
+                <img src="avatar.webp" alt="avatar" class="avatar">
+                <span class="icon-circle">🔍</span>
+            </div>
+        </div>
+
+        <!-- 欢迎文字区域 -->
+        <div class="greeting">
+            <h1>Hi Robbie</h1>
+            <p>Welcome Home</p>
+        </div>
+
+        <!-- 房间标签栏 -->
+        <div class="room-tabs">
+            <div class="tab">+</div>
+            <div class="tab active">Living Room</div>
+            <div class="tab">Kitchen</div>
+            <div class="tab">Bedroom</div>
+        </div>
+
+        <!-- 音乐卡片模块 -->
+        <div class="glass-card music-card">
+            <img src="music-cover.webp" alt="cover" class="music-cover">
+            <div class="music-info">
+                <div class="music-title">People Are People</div>
+                <div class="music-artist">Depeche Mode</div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="music-controls">
+                    <span>🔁</span>
+                    <span>◀◀</span>
+                    <span>⏸</span>
+                    <span>▶▶</span>
+                    <span>♡</span>
+                </div>
+                <span style="float:right;font-size:14px;opacity:0.7;">1:24</span>
+            </div>
+        </div>
+
+        <!-- 上排两个卡片：智能灯 + 闹钟 -->
+        <div class="grid-2col">
+            <!-- 智能灯卡片 -->
+            <div class="glass-card light-card">
+                <img src="lamp.webp" alt="smart light" class="light-img">
+                <div class="card-footer">
+                    <div>
+                        <h3>Smart Light</h3>
+                        <p style="opacity:0.7;">Brightness 64%</p>
+                    </div>
+                    <div class="toggle"></div>
+                </div>
+            </div>
+            <!-- 闹钟卡片 -->
+            <div class="glass-card alarm-card">
+                <h3>Alarm</h3>
+                <div class="alarm-time">07:00</div>
+                <p style="opacity:0.7;">Work</p>
+                <div class="card-footer">
+                    <span>On</span>
+                    <div class="toggle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 下排两个卡片：WIFI + 温度 -->
+        <div class="grid-bottom">
+            <!-- WIFI卡片 -->
+            <div class="glass-card wifi-card">
+                <span style="font-size:32px;">📶</span>
+                <h3 style="margin-top:12px;font-size:28px;">Wi-Fi</h3>
+                <p style="opacity:0.7;">RTAA56-728899</p>
+            </div>
+            <!-- 温度卡片 -->
+            <div class="glass-card temp-card">
+                <div class="temp-circle">24°C</div>
+                <h3>Home</h3>
+                <div class="toggle"></div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <span>🏠</span>
+            <span>💡</span>
+            <span>🌡️</span>
+            <span>⚙️</span>
+        </div>
+    </div>
+</body>
+</html>
